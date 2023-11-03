@@ -1,3 +1,11 @@
+/*
+    OBRATI PAZNJU!
+    - slobodno raspizdi MAX_LOG
+    - slucaj da je b potomak od a
+    - root mora biti parent sam sebe
+*/
+    
+
 #include <bits/stdc++.h>
 #define all(x) x.begin(), x.end();
 #define nl '\n'
