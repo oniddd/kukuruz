@@ -12,6 +12,11 @@ vector<int> G[100005], GT[100005], topo;
 int comp[100005];
 bool vis[100005];
 
+/*
+	1. topoloski sortirati raf
+	2. pokreni dfs na transponiranom grafu tim slijedom
+*/
+
 void dfs1(int u) {
 	vis[u] = 1;
 	for(int v : G[u])
