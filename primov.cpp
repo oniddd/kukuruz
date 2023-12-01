@@ -1,3 +1,8 @@
+/*
+    PAZNJA: RADI PROVJERU POSJECENOSTI NA OBA MJESTA!
+*/
+    
+
 #include <bits/stdc++.h>
 
 using namespace std;
