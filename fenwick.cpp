@@ -11,6 +11,7 @@ private:
 public:
     Fenwick(T n) : BIT(n+1, 0) {}
 
+	// ??
     void construct() {
         for(int i = 1; i <= n; i++) {
 			int r = i + (i & -i);
