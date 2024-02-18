@@ -14,7 +14,7 @@ int n;
 struct Query {
 	int l, r, idx;
 	bool operator<(Query q) const {
-		return pair{l / sqrt(n), r} < pair{q.l / sqrt(n), q.r};
+		return pair{l / sqrt(MAX), r} < pair{q.l / sqrt(MAX), q.r};
 	}
 };
 
