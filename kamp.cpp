@@ -8,11 +8,11 @@ using ll = long long;
 using pii = pair<int,int>;
 using pll = pair<ll,ll>;
 
-int val[200005];
-pii edges[300005];
-pii queries[500005];
-pii interval[500005];
-vector<int> G[500005]; // 400005
+int val[200005], byval[200005];
+pii edges[300005], interval[500005];
+vector<pii> queries;
+vector<int> G[500005];
+bool removed[200005];
 
 const int N = (1 << 18);
 struct SegTree {
@@ -116,21 +116,51 @@ int main() {
 	int n,m,q;
 	cin>>n>>m>>q;
 
-	for(int i = 1; i <= n; i++)
+	int oq = q;
+
+	for(int i = 1; i <= n; i++) {
 		cin>>val[i];
+		byval[val[i]] = i;
+	}
 	for(int i = 1; i <= m; i++) {
 		int a,b;
 		cin>>a>>b;
 		edges[i] = {a,b};
 	}
-	for(int i = 1; i <= q; i++) {
+	queries.resize(q);
+	for(int i = 0; i < q; i++) {
 		int a,b;
 		cin>>a>>b;
 		queries[i] = {a,b};
+		if(a == 2)
+			removed[b] = 1;
 	}
+
+	for(int i = 1; i <= n; i++)
+		if(!removed[i]) {
+			queries.emplace_back(2, i);
+			++q;
+		}
 
 	auto uf = UF(2*n+5);
 	int nodecnt = n;
+	for(int i = q-1; i >= 0; i--) {
+		auto [t, x] = queries[i];
+		if(t == 1)
+			continue;
+		
+		++nodecnt;
+		auto [a, b] = edges[x];
+		int c = uf.node[uf.f(a)];
+		int d = uf.node[uf.f(b)];
+		uf.u(a,b);
+		uf.node[uf.f(a)] = nodecnt;
+
+		G[nodecnt].push_back(c);
+		if(c != d)
+			G[nodecnt].push_back(d);
+	}
+	/*
 	for(int i = m; i > 0; i--) {
 		++nodecnt;
 		auto [a, b] = edges[i];
@@ -143,8 +173,9 @@ int main() {
 		if(c != d)
 			G[nodecnt].push_back(d);
 	}
-	
-	dfs(nodecnt, -1);
+	*/
+	int root = nodecnt;	
+	dfs(root, -1);
 
 	auto st = SegTree();	
 	for(int i = 1; i <= n; i++) {
@@ -152,14 +183,12 @@ int main() {
 		st.T[N+j] = val[i];
 	}
 	st.build();
+		
 
-	cout<<st.query(0,0)<<nl;	
-	/*	
+	/*
 	for(int i = 1; i <= root; i++) {
 		cout<<i<<": ["<<interval[i].first<<sp<<interval[i].second<<"]"<<nl;
 	}
-	*/
-	/*	
 	vector<bool> vis(n+1);
 	queue<int> qu;
 	qu.push(root);
@@ -174,12 +203,31 @@ int main() {
 			}
 	}
 	*/
-	
 
 	// pretpostavka: svi se brišu na kraju
-
-
-
-
+	vector nodes{root};
+	vector intervals{interval[root]};
+	for(auto [t, x] : queries) {
+		if(t == 1) {
+			--x;
+			for(auto [l, r] : intervals) {
+				if(x >= l && x <= r) {
+					int ans = st.query(l, r);
+					st.update(byval[ans]-1, 0);
+					cout<<ans<<nl;
+					break;
+				}
+			}
+		} else {
+			vector<int> newnodes;
+			for(int u : nodes)
+				for(int v : G[u])
+					newnodes.push_back(v);
+			nodes = newnodes;
+			intervals.clear();
+			for(int u : nodes)
+				intervals.push_back(interval[u]);
+		}
+	}
 	return 0;
 }
