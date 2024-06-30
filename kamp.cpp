@@ -8,7 +8,7 @@ using ll = long long;
 using pii = pair<int,int>;
 using pll = pair<ll,ll>;
 
-int val[200005], byval[200005];
+int val[200005], byval[200005], depth[500005], mapping[200005];
 pii edges[300005], interval[500005];
 vector<pii> queries;
 vector<int> G[500005];
@@ -86,9 +86,11 @@ struct UF
 };
 
 int tick = 0;
-void dfs(int u, int p) {
+void dfs(int u, int p, int d) {
+	depth[u] = d;
 	if(G[u].empty()) {
 		interval[u] = {tick, tick};
+		mapping[u] = tick;
 		++tick;
 		return;
 	}
@@ -96,15 +98,12 @@ void dfs(int u, int p) {
 	int r = -1e9;
 	for(int v : G[u])
 		if(v != p) {
-			dfs(v, u);
+			dfs(v, u, d+1);
 			l = min(l, interval[v].first);
 			r = max(r, interval[v].second);
 		}
 	interval[u] = {l, r};
 }
-
-// https://codeforces.com/contest/1416/problem/D
-// https://vjudge.net/contest/636651#problem/F
 
 int main() {
 	ios::sync_with_stdio(false);
@@ -136,7 +135,7 @@ int main() {
 			removed[b] = 1;
 	}
 
-	for(int i = 1; i <= n; i++)
+	for(int i = 1; i <= m; i++)
 		if(!removed[i]) {
 			queries.emplace_back(2, i);
 			++q;
@@ -174,8 +173,18 @@ int main() {
 			G[nodecnt].push_back(d);
 	}
 	*/
-	int root = nodecnt;	
-	dfs(root, -1);
+
+	unordered_set<int> snodes;
+	for(int i = 1; i <= n; i++)
+		snodes.insert(uf.node[uf.f(i)]);
+
+	vector<int> nodes(all(snodes));
+
+	int maxdepth = 0;
+	for(int u : nodes) {
+		dfs(u, -1, 1);
+		maxdepth = max(maxdepth, depth[u]);
+	}
 
 	auto st = SegTree();	
 	for(int i = 1; i <= n; i++) {
@@ -184,14 +193,14 @@ int main() {
 	}
 	st.build();
 		
-
 	/*
-	for(int i = 1; i <= root; i++) {
+	for(int i = 1; i <= nodecnt; i++) {
 		cout<<i<<": ["<<interval[i].first<<sp<<interval[i].second<<"]"<<nl;
 	}
 	vector<bool> vis(n+1);
 	queue<int> qu;
-	qu.push(root);
+	for(int x : nodes)
+		qu.push(x);
 	while(!qu.empty()) {
 		int u = qu.front();
 		qu.pop();
@@ -202,31 +211,37 @@ int main() {
 				qu.push(v);
 			}
 	}
+	
+	cout<<endl;
 	*/
-
-	// pretpostavka: svi se brišu na kraju
-	vector nodes{root};
-	vector intervals{interval[root]};
 	for(auto [t, x] : queries) {
 		if(t == 1) {
-			--x;
-			for(auto [l, r] : intervals) {
+			x = mapping[x];
+			for(auto u : nodes) {
+				auto [l, r] = interval[u];
 				if(x >= l && x <= r) {
 					int ans = st.query(l, r);
-					st.update(byval[ans]-1, 0);
+					st.update(mapping[byval[ans]], 0);
 					cout<<ans<<nl;
 					break;
 				}
 			}
 		} else {
 			vector<int> newnodes;
-			for(int u : nodes)
-				for(int v : G[u])
-					newnodes.push_back(v);
+			for(int u : nodes) {
+				if(depth[u] < maxdepth)
+					for(int v : G[u])
+						newnodes.push_back(v);
+			}
+			if(newnodes.empty()) {
+				for(int u : nodes) {
+					for(int v : G[u])
+						newnodes.push_back(v);
+				}
+			}
 			nodes = newnodes;
-			intervals.clear();
 			for(int u : nodes)
-				intervals.push_back(interval[u]);
+				maxdepth = max(maxdepth, depth[u]);
 		}
 	}
 	return 0;
